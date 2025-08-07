@@ -37,12 +37,26 @@ This is a high-performance API project built with **Fastify** and **Prisma**.
 
 ## Project Structure
 
-- `prisma/` - Contains Prisma schema and migrations
-- `src/` - Source code for the API
-  - `src/index.ts` - Main Fastify server
-  - `src/routes/` - API route modules
-  - `src/lib/` - Utility functions and Prisma client
-- `.env` - Environment variables (create from `.env.example`)
+```
+sync/
+├── prisma/              # Database schema and migrations
+│   └── schema.prisma    # Prisma database schema
+├── src/                 # TypeScript source code
+│   ├── index.ts         # Main Fastify server entry point
+│   ├── lib/             # Utility functions and shared code
+│   │   └── prisma.ts    # Prisma client singleton
+│   └── routes/          # API route handlers
+│       └── api.ts       # Main API routes
+├── dist/                # Compiled JavaScript (auto-generated)
+├── .env.example         # Environment variables template
+├── .env                 # Your environment variables (create this)
+└── package.json         # Project dependencies and scripts
+```
+
+**Important Notes:**
+- Only edit files in `src/` - never modify files in `dist/`
+- The `dist/` folder is auto-generated when you run `npm run build`
+- All `.js`, `.js.map`, and `.d.ts` files are compiled output - don't edit them manually
 
 ## API Endpoints
 

@@ -65,40 +65,6 @@ async function apiRoutes(fastify: FastifyInstance) {
       }
     }
   })
-
-  // Example CRUD endpoints (placeholder for your models)
-  
-  // GET /api/items - List all items
-  fastify.get('/items', async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      // Example: Replace with your actual Prisma model
-      // const items = await prisma.item.findMany()
-      
-      return {
-        message: 'Items endpoint - implement with your Prisma models',
-        // data: items
-      }
-    } catch (error) {
-      reply.code(500)
-      return { error: 'Failed to fetch items' }
-    }
-  })
-
-  // POST /api/items - Create a new item
-  fastify.post('/items', async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      // Example: Replace with your actual Prisma model
-      // const item = await prisma.item.create({ data: request.body })
-      
-      return {
-        message: 'Create item endpoint - implement with your Prisma models',
-        // data: item
-      }
-    } catch (error) {
-      reply.code(500)
-      return { error: 'Failed to create item' }
-    }
-  })
 }
 
 export default apiRoutes
