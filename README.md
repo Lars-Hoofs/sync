@@ -1,6 +1,6 @@
-# Sync - Prisma API Project
+# Sync - Prisma + Fastify API Project
 
-This is a Prisma-based API project.
+This is a high-performance API project built with **Fastify** and **Prisma**.
 
 ## Getting Started
 
@@ -39,7 +39,27 @@ This is a Prisma-based API project.
 
 - `prisma/` - Contains Prisma schema and migrations
 - `src/` - Source code for the API
+  - `src/index.ts` - Main Fastify server
+  - `src/routes/` - API route modules
+  - `src/lib/` - Utility functions and Prisma client
 - `.env` - Environment variables (create from `.env.example`)
+
+## API Endpoints
+
+Once the server is running, you can access the following endpoints:
+
+- `GET /` - API information and available endpoints
+- `GET /api/health` - Health check endpoint
+- `GET /api/status` - Database connection status
+- `GET /api/items` - Example CRUD endpoint (placeholder)
+- `POST /api/items` - Example create endpoint (placeholder)
+
+## Tech Stack
+
+- **Fastify** - Fast and efficient web framework
+- **Prisma** - Type-safe database ORM
+- **TypeScript** - Type safety and better developer experience
+- **Node.js** - Runtime environment
 
 ## Available Scripts
 
