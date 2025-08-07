@@ -16,7 +16,13 @@
     "type": "git",
     "url": "git+https://github.com/Lars-Hoofs/sync.git"
   },
-  "keywords": ["fastify", "prisma", "api", "typescript", "sync"],
+  "keywords": [
+    "fastify",
+    "prisma",
+    "api",
+    "typescript",
+    "sync"
+  ],
   "author": "Lars Hoofs",
   "license": "ISC",
   "type": "module",
@@ -26,6 +32,8 @@
   "homepage": "https://github.com/Lars-Hoofs/sync#readme",
   "dependencies": {
     "@fastify/cors": "^11.1.0",
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.3",
     "@prisma/client": "^6.13.0",
     "fastify": "^5.4.0",
     "prisma": "^6.13.0"

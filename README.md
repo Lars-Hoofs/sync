@@ -58,12 +58,20 @@ sync/
 - The `dist/` folder is auto-generated when you run `npm run build`
 - All `.js`, `.js.map`, and `.d.ts` files are compiled output - don't edit them manually
 
-## API Endpoints
+## API Documentation
 
-Once the server is running, you can access the following endpoints:
+### Interactive Documentation (Swagger UI)
+Once the server is running, visit **http://localhost:3000/docs** for interactive API documentation where you can:
+- View all available endpoints
+- See request/response schemas
+- Test endpoints directly in your browser
+- Download OpenAPI specification
+
+### Available Endpoints
 
 - `GET /` - API information and available endpoints
-- `GET /api/health` - Health check endpoint
+- `GET /docs` - **Interactive Swagger UI documentation**
+- `GET /api/health` - Health check endpoint  
 - `GET /api/status` - Database connection status
 - `GET /api/items` - Example CRUD endpoint (placeholder)
 - `POST /api/items` - Example create endpoint (placeholder)
@@ -73,6 +81,7 @@ Once the server is running, you can access the following endpoints:
 - **Fastify** - Fast and efficient web framework
 - **Prisma** - Type-safe database ORM
 - **TypeScript** - Type safety and better developer experience
+- **Swagger UI** - Interactive API documentation
 - **Node.js** - Runtime environment
 
 ## Available Scripts
