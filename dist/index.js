@@ -25,8 +25,7 @@ async function createServer() {
                 }
             ],
             tags: [
-                { name: 'Health', description: 'Health check endpoints' },
-                { name: 'Items', description: 'Items management endpoints' }
+                { name: 'Health', description: 'Health check endpoints' }
             ]
         }
     });
@@ -61,8 +60,7 @@ async function createServer() {
                             type: 'object',
                             properties: {
                                 health: { type: 'string' },
-                                status: { type: 'string' },
-                                items: { type: 'string' }
+                                status: { type: 'string' }
                             }
                         }
                     }
@@ -77,8 +75,7 @@ async function createServer() {
             documentation: '/docs',
             endpoints: {
                 health: '/api/health',
-                status: '/api/status',
-                items: '/api/items'
+                status: '/api/status'
             }
         };
     });

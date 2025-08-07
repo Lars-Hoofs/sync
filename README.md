@@ -73,8 +73,6 @@ Once the server is running, visit **http://localhost:3000/docs** for interactive
 - `GET /docs` - **Interactive Swagger UI documentation**
 - `GET /api/health` - Health check endpoint  
 - `GET /api/status` - Database connection status
-- `GET /api/items` - Example CRUD endpoint (placeholder)
-- `POST /api/items` - Example create endpoint (placeholder)
 
 ## Tech Stack
 
