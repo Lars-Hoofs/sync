@@ -1,98 +1,97 @@
-# Sync - Prisma + Fastify API Project
+# Sync API
 
-This is a high-performance API project built with **Fastify** and **Prisma**.
+Een multi-tenant API voor chatbot widget management gebouwd met Fastify, Prisma en TypeScript.
 
-## Getting Started
+## 🚀 Features
 
-### Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
+- **Multi-tenant architectuur** - Isolatie per organisatie
+- **Uitnodiging-gebaseerd lidmaatschap** - Gebruikers kunnen alleen via uitnodigingen lid worden van organisaties
+- **Chatbot management** - Aanmaken en beheren van chatbots voor customer support widgets
+- **Geavanceerde authenticatie** - Met TOTP/HOTP 2FA ondersteuning
+- **Rechten management** - Uitgebreid systeem voor autorisatie
+- **Rate limiting** - Bescherming tegen misbruik
+- **API documentatie** - Automatisch gegenereerde Swagger/OpenAPI docs
+- **Type-safe** - Volledig gebouwd met TypeScript en Zod validatie
 
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Lars-Hoofs/sync.git
-   cd sync
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Set up your database:
-   - Copy `.env.example` to `.env`
-   - Update the `DATABASE_URL` in `.env`
-
-4. Run database migrations:
-   ```bash
-   npx prisma migrate dev
-   ```
-
-5. Generate Prisma client:
-   ```bash
-   npx prisma generate
-   ```
-
-## Project Structure
-
-```
-sync/
-├── prisma/              # Database schema and migrations
-│   └── schema.prisma    # Prisma database schema
-├── src/                 # TypeScript source code
-│   ├── index.ts         # Main Fastify server entry point
-│   ├── lib/             # Utility functions and shared code
-│   │   └── prisma.ts    # Prisma client singleton
-│   └── routes/          # API route handlers
-│       └── api.ts       # Main API routes
-├── dist/                # Compiled JavaScript (auto-generated)
-├── .env.example         # Environment variables template
-├── .env                 # Your environment variables (create this)
-└── package.json         # Project dependencies and scripts
-```
-
-**Important Notes:**
-- Only edit files in `src/` - never modify files in `dist/`
-- The `dist/` folder is auto-generated when you run `npm run build`
-- All `.js`, `.js.map`, and `.d.ts` files are compiled output - don't edit them manually
-
-## API Documentation
-
-### Interactive Documentation (Swagger UI)
-Once the server is running, visit **http://localhost:3000/docs** for interactive API documentation where you can:
-- View all available endpoints
-- See request/response schemas
-- Test endpoints directly in your browser
-- Download OpenAPI specification
-
-### Available Endpoints
-
-- `GET /` - API information and available endpoints
-- `GET /docs` - **Interactive Swagger UI documentation**
-- `GET /api/health` - Health check endpoint  
-- `GET /api/status` - Database connection status
-
-## Tech Stack
+## 🛠 Tech Stack
 
 - **Fastify** - Fast and efficient web framework
 - **Prisma** - Type-safe database ORM
-- **TypeScript** - Type safety and better developer experience
+- **PostgreSQL** - Database
+- **TypeScript** - Type safety en developer experience
+- **Zod** - Schema validatie
+- **Argon2** - Password hashing
+- **Jose** - JWT alternatieven
+- **Pino** - High performance logging
 - **Swagger UI** - Interactive API documentation
-- **Node.js** - Runtime environment
 
-## Available Scripts
+## ⚡ Quick Start
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npx prisma studio` - Open Prisma Studio (database GUI)
-
-## Environment Variables
-
-Create a `.env` file with the following variables:
-
+### 1. Clone het project
+```bash
+git clone https://github.com/Lars-Hoofs/sync.git
+cd sync
 ```
-DATABASE_URL="your_database_connection_string"
+
+### 2. Install dependencies
+```bash
+npm install
 ```
+
+### 3. Environment setup
+Kopieer `.env.example` naar `.env` en vul de juiste waarden in.
+
+### 4. Database setup
+
+Genereer Prisma client:
+```bash
+npm run db:generate
+```
+
+Run database migrations:
+```bash
+npm run db:migrate
+```
+
+Seed de database met test data:
+```bash
+npm run db:seed
+```
+
+### 5. Start de development server
+```bash
+npm run dev
+```
+
+De API is nu beschikbaar op:
+- **API**: http://localhost:3000
+- **Documentation**: http://localhost:3000/docs
+- **Health check**: http://localhost:3000/health
+
+## 🔧 Available Scripts
+
+```bash
+# Development
+npm run dev              # Start development server
+npm run build            # Build for production
+npm run start            # Start production server
+
+# Database
+npm run db:generate      # Generate Prisma client
+npm run db:migrate       # Run database migrations
+npm run db:studio        # Open Prisma Studio
+npm run db:seed          # Seed database with test data
+```
+
+## 📖 API Documentation
+
+Na het starten van de server is de interactieve API documentatie beschikbaar op:
+http://localhost:3000/docs
+
+## 🔐 Test Gebruiker
+
+Na het seeden is er een test gebruiker beschikbaar:
+- Email: `test@example.com`
+- Password: `TestWachtwoord123!`
+
+

@@ -1,15 +1,728 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Dit is je Prisma schema bestand,
+// meer informatie: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model Gebruiker {
+  id            String  @id @default(cuid())
+  email         String  @unique
+  voornaam      String
+  tussenvoegsel String?
+  achternaam    String
+  wachtwoord    String
+
+  emailGeverifieerd   Boolean   @default(false)
+  emailGeverifieerdOp DateTime?
+
+  isActief              Boolean   @default(true)
+  isGeblokkeerd         Boolean   @default(false)
+  aantalMisluktLogins   Int       @default(0)
+  laatsteMisluktLoginOp DateTime?
+  geblokkeerTot         DateTime?
+
+  aangemaaktOp               DateTime  @default(now())
+  bijgewerktOp               DateTime  @updatedAt
+  laatsteLogin               DateTime?
+  laatsteWachtwoordWijziging DateTime?
+
+  tweeFAIngeschakeld Boolean  @default(false)
+  tweeFAGeheim       String?
+  tweeFABackupCodes  String[]
+
+  gdprToestemmingOp             DateTime?
+  gdprGegevensExportAangevraagd Boolean   @default(false)
+  gdprVerwijderAangevraagdOp    DateTime?
+  
+  // Admin flag for system administrators
+  isAdmin Boolean @default(false)
+
+  emailVerificatieTokens      EmailVerificatieToken[]
+  wachtwoordResetTokens       WachtwoordResetToken[]
+  tweeFATokens                TweeFAToken[]
+  loginLogs                   LoginLog[]
+  sessies                     Sessie[]
+  eigenOrganisaties           Organisatie[]
+  organisatieLidmaatschap     OrganisatieLidmaatschap[]
+  verstuurdeUitnodigingen     Uitnodiging[]
+  gebruikersGroepLidmaatschap GebruikersGroepLidmaatschap[]
+  rateLimits                  RateLimit[]
+  groepLidmaatschappen        GroepLidmaatschap[]
+  auditLogs                   AuditLog[]
+
+  @@map("gebruikers")
+}
+
+model Organisatie {
+  id           String   @id @default(cuid())
+  naam         String
+  slug         String   @unique
+  domein       String?  @unique
+  aangemaaktOp DateTime @default(now())
+  bijgewerktOp DateTime @updatedAt
+
+  tweeFAVerplicht      Boolean  @default(false)
+  ipWhitelist          String[]
+  maxAantalLeden       Int?
+  sessieTimeoutMinuten Int      @default(480)
+
+  dataIsolatieId String @unique @default(cuid())
+  maxOpslag      Int?
+  maxApiCalls    Int?
+  maxProjecten   Int?
+
+  eigenaarId String
+  eigenaar   Gebruiker @relation(fields: [eigenaarId], references: [id], onDelete: Restrict)
+
+  stripeKlantId         String?          @unique
+  stripeAbonnementId    String?          @unique
+  abonnementStatus      AbonnementStatus @default(PROEFPERIODE)
+  abonnementPlan        String?
+  abonnementEindigtOp   DateTime?
+  proefperiodeEindigtOp DateTime?
+
+  leden                  OrganisatieLidmaatschap[]
+  uitnodigingen          Uitnodiging[]
+  rechten                Recht[]
+  activiteitsLogs        ActiviteitsLog[]
+  gebruikersGroepen      GebruikersGroep[]
+  dataClassificaties     DataClassificatie[]
+  facturatieGeschiedenis FacturatieGeschiedenis[]
+  gebruiksStatistieken   GebruiksStatistiek[]
+  chatbots               ChatBot[]
+  abonnementen           Abonnement[]
+  groepen                Groep[]
+  auditLogs              AuditLog[]
+
+  @@map("organisaties")
+}
+
+model OrganisatieLidmaatschap {
+  id           String   @id @default(cuid())
+  aangemaaktOp DateTime @default(now())
+  bijgewerktOp DateTime @updatedAt
+  isActief     Boolean  @default(true)
+
+  laatsteActiviteit        DateTime?
+  ipAdresLaatsteActiviteit String?
+
+  gebruikerId String
+  gebruiker   Gebruiker @relation(fields: [gebruikerId], references: [id], onDelete: Cascade)
+
+  organisatieId String
+  organisatie   Organisatie @relation(fields: [organisatieId], references: [id], onDelete: Cascade)
+
+  rol     OrganisatieRol        @default(LID)
+  rechten OrganisatieLidRecht[]
+
+  @@unique([gebruikerId, organisatieId])
+  @@map("organisatie_lidmaatschappen")
+}
+
+model GebruikersGroep {
+  id           String   @id @default(cuid())
+  naam         String
+  beschrijving String?
+  aangemaaktOp DateTime @default(now())
+  bijgewerktOp DateTime @updatedAt
+
+  organisatieId String
+  organisatie   Organisatie @relation(fields: [organisatieId], references: [id], onDelete: Cascade)
+
+  leden   GebruikersGroepLidmaatschap[]
+  rechten GebruikersGroepRecht[]
+
+  @@unique([organisatieId, naam])
+  @@map("gebruikers_groepen")
+}
+
+model GebruikersGroepLidmaatschap {
+  id           String   @id @default(cuid())
+  aangemaaktOp DateTime @default(now())
+
+  gebruikerId String
+  gebruiker   Gebruiker @relation(fields: [gebruikerId], references: [id], onDelete: Cascade)
+
+  groepId String
+  groep   GebruikersGroep @relation(fields: [groepId], references: [id], onDelete: Cascade)
+
+  @@unique([gebruikerId, groepId])
+  @@map("gebruikers_groep_lidmaatschappen")
+}
+
+model GebruikersGroepRecht {
+  id String @id @default(cuid())
+
+  groepId String
+  groep   GebruikersGroep @relation(fields: [groepId], references: [id], onDelete: Cascade)
+
+  rechtId String
+  recht   Recht  @relation(fields: [rechtId], references: [id], onDelete: Cascade)
+
+  resourceType String?
+  resourceId   String?
+
+  toegekend     Boolean  @default(true)
+  toegekendOp   DateTime @default(now())
+  toegekendDoor String?
+
+  @@unique([groepId, rechtId, resourceType, resourceId])
+  @@map("gebruikers_groep_rechten")
+}
+
+model OrganisatieLidRecht {
+  id String @id @default(cuid())
+
+  lidmaatschapId String
+  lidmaatschap   OrganisatieLidmaatschap @relation(fields: [lidmaatschapId], references: [id], onDelete: Cascade)
+
+  rechtId String
+  recht   Recht  @relation(fields: [rechtId], references: [id], onDelete: Cascade)
+
+  resourceType String?
+  resourceId   String?
+
+  toegekend     Boolean  @default(true)
+  toegekendOp   DateTime @default(now())
+  toegekendDoor String?
+
+  @@unique([lidmaatschapId, rechtId, resourceType, resourceId])
+  @@map("organisatie_lid_rechten")
+}
+
+model Recht {
+  id           String @id @default(cuid())
+  naam         String
+  beschrijving String
+  categorie    String
+
+  organisatieId String
+  organisatie   Organisatie @relation(fields: [organisatieId], references: [id], onDelete: Cascade)
+
+  lidRechten   OrganisatieLidRecht[]
+  groepRechten GebruikersGroepRecht[]
+
+  @@unique([organisatieId, naam])
+  @@map("rechten")
+}
+
+model DataClassificatie {
+  id           String                  @id @default(cuid())
+  naam         String
+  niveau       DataGevoeligheidsNiveau
+  beschrijving String
+  kleurCode    String?
+
+  organisatieId String
+  organisatie   Organisatie @relation(fields: [organisatieId], references: [id], onDelete: Cascade)
+
+  @@unique([organisatieId, naam])
+  @@map("data_classificaties")
+}
+
+model RateLimit {
+  id           String   @id @default(cuid())
+  ipAdres      String?
+  endpoint     String
+  aantalCalls  Int      @default(0)
+  resetTijd    DateTime
+  aangemaaktOp DateTime @default(now())
+  bijgewerktOp DateTime @updatedAt
+
+  gebruikerId String?
+  gebruiker   Gebruiker? @relation(fields: [gebruikerId], references: [id], onDelete: Cascade)
+
+  @@unique([ipAdres, gebruikerId, endpoint])
+  @@map("rate_limits")
+}
+
+model FacturatieGeschiedenis {
+  id              String        @id @default(cuid())
+  factuurNummer   String        @unique
+  bedrag          Decimal       @db.Decimal(10, 2)
+  valuta          String        @default("EUR")
+  status          FactuurStatus
+  factuurDatum    DateTime
+  vervaldatum     DateTime
+  betaaldOp       DateTime?
+  stripeFactuurId String?       @unique
+
+  organisatieId String
+  organisatie   Organisatie @relation(fields: [organisatieId], references: [id], onDelete: Cascade)
+
+  @@map("facturatie_geschiedenis")
+}
+
+model GebruiksStatistiek {
+  id         String   @id @default(cuid())
+  datum      DateTime @default(now()) @db.Date
+  metricNaam String
+  waarde     Decimal  @db.Decimal(15, 2)
+  eenheid    String?
+
+  organisatieId String
+  organisatie   Organisatie @relation(fields: [organisatieId], references: [id], onDelete: Cascade)
+
+  @@unique([organisatieId, datum, metricNaam])
+  @@map("gebruiks_statistieken")
+}
+
+model Uitnodiging {
+  id             String            @id @default(cuid())
+  email          String
+  rol            OrganisatieRol    @default(LID)
+  token          String            @unique
+  status         UitnodigingStatus @default(PENDING)
+  verlooptOp     DateTime
+  aangemaaktOp   DateTime          @default(now())
+  bijgewerktOp   DateTime          @updatedAt
+  beantwoordOp   DateTime?
+  geaccepteerdOp DateTime?
+
+  bericht            String?
+  ipAdresUitnodiging String?
+  ipAdresAcceptatie  String?
+
+  organisatieId String
+  organisatie   Organisatie @relation(fields: [organisatieId], references: [id], onDelete: Cascade)
+
+  uitnodigerId String
+  uitnodiger   Gebruiker @relation(fields: [uitnodigerId], references: [id], onDelete: Cascade)
+
+  voorafGedefinieerdeRechten Json?
+
+  @@unique([organisatieId, email])
+  @@map("uitnodigingen")
+}
+
+model EmailVerificatieToken {
+  id              String    @id @default(cuid())
+  token           String    @unique
+  verlooptOp      DateTime
+  aangemaaktOp    DateTime  @default(now())
+  gebruiktOp      DateTime?
+  ipAdresGebruikt String?
+
+  gebruikerId String
+  gebruiker   Gebruiker @relation(fields: [gebruikerId], references: [id], onDelete: Cascade)
+
+  @@map("email_verificatie_tokens")
+}
+
+model WachtwoordResetToken {
+  id              String    @id @default(cuid())
+  token           String    @unique
+  verlooptOp      DateTime
+  aangemaaktOp    DateTime  @default(now())
+  gebruiktOp      DateTime?
+  ipAdresAanvraag String?
+  ipAdresGebruikt String?
+
+  gebruikerId String
+  gebruiker   Gebruiker @relation(fields: [gebruikerId], references: [id], onDelete: Cascade)
+
+  @@map("wachtwoord_reset_tokens")
+}
+
+model TweeFAToken {
+  id              String     @id @default(cuid())
+  token           String     @unique
+  type            TweeFAType
+  verlooptOp      DateTime
+  aangemaaktOp    DateTime   @default(now())
+  gebruiktOp      DateTime?
+  ipAdresGebruikt String?
+
+  gebruikerId String
+  gebruiker   Gebruiker @relation(fields: [gebruikerId], references: [id], onDelete: Cascade)
+
+  @@map("twee_fa_tokens")
+}
+
+model Sessie {
+  id                String      @id @default(cuid())
+  token             String      @unique
+  status            SessieStatus @default(ACTIEF)
+  verlooptOp        DateTime
+  aangemaaktOp      DateTime    @default(now())
+  bijgewerktOp      DateTime    @updatedAt
+  ipAdres           String?
+  userAgent         String?
+  deviceType        DeviceType? @default(UNKNOWN)
+  browser           String?
+  os                String?
+  isMobile          Boolean     @default(false)
+  laatsteActiviteit DateTime    @default(now())
+
+  gebruikerId String
+  gebruiker   Gebruiker @relation(fields: [gebruikerId], references: [id], onDelete: Cascade)
+
+  @@map("sessies")
+}
+
+model LoginLog {
+  id              String   @id @default(cuid())
+  aangemaaktOp    DateTime @default(now())
+  isSuccesvol     Boolean
+  ipAdres         String
+  gebruikersAgent String?
+  foutmelding     String?
+  locatie         String?
+
+  gebruikerId String
+  gebruiker   Gebruiker @relation(fields: [gebruikerId], references: [id], onDelete: Cascade)
+
+  @@map("login_logs")
+}
+
+model ActiviteitsLog {
+  id              String   @id @default(cuid())
+  aangemaaktOp    DateTime @default(now())
+  actie           String
+  resource        String?
+  resourceId      String?
+  ipAdres         String?
+  gebruikersAgent String?
+  metadata        Json?
+
+  gebruikerId   String?
+  organisatieId String
+  organisatie   Organisatie @relation(fields: [organisatieId], references: [id], onDelete: Cascade)
+
+  @@map("activiteits_logs")
+}
+
+model ChatBot {
+  id String @id @default(cuid())
+  aangemaaktOp DateTime @default(now())
+  bijgewerktOp DateTime @updatedAt
+
+  organisatieId String
+  organisatie   Organisatie @relation(fields: [organisatieId], references: [id], onDelete: Cascade)
+
+  botNaam String
+  widgetNaam String
+  websiteUrl String?
+  klantenServiceEmail String?
+
+  basisPrompt String
+  toon String
+  startBericht String
+
+  mainKleur String
+  secundaireKleur String?
+  achtergrondKleur String?
+  tekstKleur String?
+  knopKleur String?
+  knopTekstKleur String?
+  knopHoverKleur String?
+  knopHoverTekstKleur String?
+  fontGrootte Int @default(16)
+  fontFamilie String @default("Arial, sans-serif")
+  
+  status String @default("CONCEPT")
+  apiSleutel String?
+
+  databronnen ChatbotDatabron[]
+  crawls WebsiteCrawl[]
+  gesprekken Gesprek[]
+}
+
+model ChatbotDatabron {
+  id String @id @default(cuid())
+  aangemaaktOp DateTime @default(now())
+  bijgewerktOp DateTime @updatedAt
+  type DataBronType
+  bestandsUrl String?
+  websiteUrl String?
+  teksten ChatbotTekst[]
+  chatbotId String
+  chatbot ChatBot @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+}
+
+model WebsiteCrawl {
+  id String @id @default(cuid())
+  aangemaaktOp DateTime @default(now())
+  status CrawlStatus @default(IN_WACHT)
+  startUrl String
+  siteMapUrl String?
+  diepte Int @default(3)
+  paginaAantal Int?
+  chatbotId String
+  chatbot ChatBot @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+  @@map("website_crawls")
+}
+
+ model ChatbotTekst {
+    id String @id @default(cuid())
+    aangemaaktOp DateTime @default(now())
+    bijgewerktOp DateTime @updatedAt
+    
+    onderwerp String
+    inhoud String @db.Text
+    
+    databronId String
+    databron ChatbotDatabron @relation(fields: [databronId], references: [id], onDelete: Cascade)
+    
+    @@map("chatbot_teksten")
+  }
+
+enum DataBronType {
+  PDF
+  CSV
+  TXT
+  WEBSITE
+  BESTAND
+}
+
+enum CrawlStatus {
+  IN_WACHT
+  BEZIG
+  KLAAR
+  MISLUKT
+}
+
+
+enum OrganisatieRol {
+  EIGENAAR
+  BEHEERDER
+  MANAGER
+  LID
+}
+
+enum AbonnementStatus {
+  PROEFPERIODE
+  ACTIEF
+  VERLOPEN
+  GEANNULEERD
+  ONBETAALD
+}
+
+enum UitnodigingStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CANCELLED
+}
+
+enum TweeFAType {
+  TOTP
+  SMS
+  EMAIL
+  BACKUP_CODE
+}
+
+enum DataGevoeligheidsNiveau {
+  OPENBAAR
+  INTERN
+  VERTROUWELIJK
+  STRIKT_VERTROUWELIJK
+}
+
+enum FactuurStatus {
+  CONCEPT
+  VERZONDEN
+  BETAALD
+  ACHTERSTALLIG
+  GEANNULEERD
+}
+
+enum SessieStatus {
+  ACTIEF
+  UITGELOGD
+  VERLOPEN
+  BEËINDIGD
+}
+
+enum DeviceType {
+  DESKTOP
+  MOBILE
+  TABLET
+  UNKNOWN
+}
+
+// Missing models added for complete functionality
+
+model Abonnement {
+  id        String   @id @default(cuid())
+  aangemaaktOp DateTime @default(now())
+  bijgewerktOp DateTime @updatedAt
+  
+  organisatieId String      @unique
+  organisatie   Organisatie @relation(fields: [organisatieId], references: [id], onDelete: Cascade)
+  
+  plan        String
+  status      String        @default("ACTIEF")
+  startDatum  DateTime      @default(now())
+  eindDatum   DateTime?
+  
+  facturen    Factuur[]
+  
+  @@map("abonnementen")
+}
+
+model Factuur {
+  id             String   @id @default(cuid())
+  factuurnummer  String   @unique
+  aangemaaktOp   DateTime @default(now())
+  bijgewerktOp   DateTime @updatedAt
+  
+  abonnementId String
+  abonnement   Abonnement @relation(fields: [abonnementId], references: [id], onDelete: Cascade)
+  
+  bedrag      Decimal     @db.Decimal(10, 2)
+  btw         Decimal     @db.Decimal(10, 2) @default(0)
+  totaalBedrag Decimal    @db.Decimal(10, 2)
+  status      FactuurStatus @default(CONCEPT)
+  factuurdatum DateTime
+  vervaldatum  DateTime
+  betaaldOp    DateTime?
+  
+  @@map("facturen")
+}
+
+model Groep {
+  id           String   @id @default(cuid())
+  naam         String
+  beschrijving String?
+  aangemaaktOp DateTime @default(now())
+  bijgewerktOp DateTime @updatedAt
+  
+  organisatieId String
+  organisatie   Organisatie @relation(fields: [organisatieId], references: [id], onDelete: Cascade)
+  
+  aangemaaktDoor String
+  
+  leden   GroepLidmaatschap[]
+  rechten GroepRecht[]
+  
+  @@unique([organisatieId, naam])
+  @@map("groepen")
+}
+
+model GroepLidmaatschap {
+  id           String   @id @default(cuid())
+  aangemaaktOp DateTime @default(now())
+  
+  groepId     String
+  groep       Groep @relation(fields: [groepId], references: [id], onDelete: Cascade)
+  
+  gebruikerId String
+  gebruiker   Gebruiker @relation(fields: [gebruikerId], references: [id], onDelete: Cascade)
+  
+  toegevoegdDoor String
+  isActief       Boolean @default(true)
+  
+  @@unique([groepId, gebruikerId])
+  @@map("groep_lidmaatschappen")
+}
+
+model GroepRecht {
+  id    String @id @default(cuid())
+  recht String
+  
+  groepId String
+  groep   Groep @relation(fields: [groepId], references: [id], onDelete: Cascade)
+  
+  @@map("groep_rechten")
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  timestamp    DateTime @default(now())
+  
+  level        String
+  category     String
+  message      String
+  details      Json?
+  
+  gebruikerId   String?
+  gebruiker     Gebruiker? @relation(fields: [gebruikerId], references: [id], onDelete: SetNull)
+  
+  organisatieId String?
+  organisatie   Organisatie? @relation(fields: [organisatieId], references: [id], onDelete: SetNull)
+  
+  ipAdres     String?
+  userAgent   String?
+  requestId   String?
+  
+  @@map("audit_logs")
+}
+
+// 2FA Models
+model TweeFASetup {
+  id             String   @id @default(cuid())
+  gebruikerId    String   @unique
+  secret         String
+  backupCodes    Json
+  aangemaakt     DateTime @default(now())
+  verloopdatum   DateTime
+  
+  @@map("tweeFA_setup")
+}
+
+model TweeFAMethode {
+  id             String   @id @default(cuid())
+  gebruikerId    String
+  type           TweeFAType
+  secret         String?
+  isActief       Boolean  @default(false)
+  aangemaakt     DateTime @default(now())
+  laatstGebruikt DateTime?
+  
+  @@map("tweeFA_methodes")
+}
+
+model TweeFABackupCode {
+  id           String   @id @default(cuid())
+  gebruikerId  String
+  code         String
+  gebruikt     Boolean  @default(false)
+  gebruikt_op  DateTime?
+  aangemaakt   DateTime @default(now())
+  
+  @@map("tweeFA_backup_codes")
+}
+
+model Gesprek {
+  id           String   @id @default(cuid())
+  startTijd    DateTime @default(now())
+  eindTijd     DateTime?
+  
+  chatbotId String
+  chatbot   ChatBot @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+  
+  sessieId        String?
+  status          String  @default("ACTIEF") // ACTIEF, AFGEROND, ONDERBROKEN
+  tevredenheidScore Int?
+  feedback        String?
+  duur            Int? // in seconden
+  
+  gebruikerInfo   Json? // naam, email, etc.
+  
+  berichten Bericht[]
+  
+  @@map("gesprekken")
+}
+
+model Bericht {
+  id           String   @id @default(cuid())
+  aangemaaktOp DateTime @default(now())
+  
+  gesprekId String
+  gesprek   Gesprek @relation(fields: [gesprekId], references: [id], onDelete: Cascade)
+  
+  inhoud    String
+  isVanBot  Boolean @default(false)
+  
+  metadata  Json? // tokens, responsTijd, confidence, etc.
+  
+  @@map("berichten")
 }
